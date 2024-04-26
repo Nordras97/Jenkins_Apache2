@@ -1,0 +1,36 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Install Apache2') {
+            steps {
+                script {
+                    // Install Apache2
+                    sh 'sudo apt-get update && sudo apt-get install -y apache2'
+                }
+            }
+        }
+        stage('Check Apache Logs') {
+            steps {
+                script {
+                    // Check Apache logs for errors
+                    def errorCount = sh(script: 'sudo cat /var/log/apache2/access.log | grep -E " (4[0-9]{2}|5[0-9]{2}) " | wc -l', returnStatus: true).trim()
+
+                    if (errorCount.toInteger() > 0) {
+                        error "Found ${errorCount} errors in Apache access log"
+                    }
+                }
+            }
+        }
+    }
+}
+
+Description and Explanation of the Solution:
+
+Installation Stage:
+We kept the installation of Apache2 as it was. It updates the package list and installs Apache2.
+Checking Apache Logs:
+Instead of reading the log line by line in a loop, we use a single grep command to filter the log entries that have HTTP status codes starting with 4 or 5.
+Then, we use wc -l to count the number of lines containing these error status codes.
+By using returnStatus: true, we capture the return code of the command, which is the count of error lines.
+If the count is greater than 0, we throw an error indicating the number of errors found.
